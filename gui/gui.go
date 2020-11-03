@@ -79,6 +79,7 @@ func getServerMSG(conn *websocket.Conn, serverMsg chan serverDataBuffer,
 				return
 			}
 			json.Unmarshal(byteData, &serverData)
+			log.Println(serverData)
 			serverMsg <- serverData
 		}
 	}
@@ -98,7 +99,7 @@ func getUserData(d string) userData {
 	}
 
 	log.Printf("Username:%s, Adress:%s", data["username"], data["url"])
-	url := url.URL{Scheme: "ws", Host: data["url"], Path: "/ws"}
+	url := url.URL{Scheme: "wss", Host: data["url"], Path: "/ws"}
 	log.Printf("connecting to %s", url.String())
 
 	return userData{
