@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -85,8 +87,41 @@ func wsEndpoint(w http.ResponseWriter, r *http.Request) {
 	updateRequest(ws)
 }
 
+func determineListenAddress() (string, error) {
+	port := os.Getenv("PORT")
+	if port == "" {
+		return "", fmt.Errorf("$PORT not set")
+	}
+	return ":" + port, nil
+}
+
+func searchIPAddress() {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				log.Println(ipnet.IP.String() + "\n")
+			}
+		}
+	}
+}
+
 func main() {
+	addr, err := determineListenAddress()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(addr)
+	searchIPAddress()
+
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/ws", wsEndpoint)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		log.Fatal(err)
+	}
 }
