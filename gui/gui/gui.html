@@ -1,0 +1,127 @@
+<html>
+	<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<title>WEBSOCKET CHAT WITH GOLANG</title>
+	<style>
+		
+		.textarea {resize: none;}
+		.conn{
+			margin: auto;width: 85%;
+			position: relative;top:10px;
+			border: 3px solid rgb(81, 255, 0);
+			border-radius: 10px;
+			padding: 15px;
+			background-color:#97ffc6;
+		}
+		.main{
+			margin: auto;width: 75%;
+			position: relative; top: 30px;
+			border: 3px solid rgb(81, 255, 0);
+			border-radius: 10px;
+			padding: 15px;
+			background-color:#97ffc6;
+
+		}
+		.button{
+			background-color: #4CAF50;
+			border: aliceblue;
+			border-radius: 5px;
+			border-width: .5em;
+			color: white;
+			padding: 5px 8px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 12px;
+		}
+		.button:hover {background-color: #3e8e41}
+
+		.text{
+			font-family: "Gill Sans", sans-serif;
+			font-size: 15px;
+			position: relative;
+			top: -5px;
+		}
+		
+
+		#conn_button{position: relative;top: 10px;left: 25px;padding: 10px 8px;}
+		#send_button{position: relative;top: -5px;left: 20px;}
+		#username{position: relative;left: 45px;}
+		#address{position: relative;left: 6px;}
+
+	</style>
+	</head>
+	<body>
+	<div class = "conn">
+		<div style="white-space:nowrap;">
+			<h class = "text">ENTER CHAT ARDDRESS:</h>
+			<textarea class="textarea" id="address" maxlength="40" cols="30" rows="1"></textarea>
+			<button class = "button" id="conn_button" onclick="connect();">CONNECT</button>
+		</div>
+		<div style="white-space:nowrap;">
+			<h class = "text">ENTER CHAT NAME:</h>
+			<textarea class="textarea" id="username" maxlength="10" cols="30" rows="1"></textarea>
+		</div>
+		
+	</div>
+	<div class = "main">
+		<textarea class="textarea" id="chat_input" maxlength="30" cols="50" rows="1"></textarea>
+		<button class = "button" id = "send_button" onclick="check();">SEND</button>
+		<textarea disabled class="textarea" id="chat_output" cols="60" rows="15"></textarea>
+	</div>
+	<script>
+		var chatInput = document.getElementById("chat_input")
+		var connButton = document.getElementById("conn_button")
+		var usernameTextarea = document.getElementById("username")
+		var adressTextarea = document.getElementById("address")
+
+		adressTextarea.value = "localhost:8080"
+
+		connect = function(){
+			if(String(usernameTextarea.value).length < 4) return
+
+			var MSG = "C:" + String(adressTextarea.value) + "|" + String(usernameTextarea.value)
+			astilectron.sendMessage(MSG, function(message) {
+				console.log(message)
+				if(message == "false"){
+					connButton.innerText = "CONNECT"
+					connButton.style.backgroundColor = "#4CAF50"
+					adressTextarea.disabled = false
+					usernameTextarea.disabled = false
+
+				} else if (message == "true"){
+					connButton.innerText = "CLOSE"
+					connButton.style.backgroundColor = "#cc3434"
+					adressTextarea.disabled = true
+					usernameTextarea.disabled = true
+				}
+			});
+		}
+
+		check = function(){
+			
+			astilectron.sendMessage("B:" + chatInput.value, function(message) {
+				console.log("received " + message)
+				var elem = document.getElementById('chat_output');
+  				elem.scrollTop = elem.scrollHeight;
+			});
+			chatInput.value = ""
+		}
+
+		document.addEventListener('astilectron-ready', function() {
+			// This will send a message to GO
+			astilectron.onMessage(function(message) {
+				if(message == "disconnect"){
+					connButton.innerText = "CONNECT"
+					connButton.style.backgroundColor = "#4CAF50"
+					adressTextarea.disabled = false
+					usernameTextarea.disabled = false
+				}
+				document.getElementById("chat_output").value = message
+				
+			});
+		})
+
+	</script>
+	</body>
+</html>
