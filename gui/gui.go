@@ -66,16 +66,15 @@ func getServerMSG(conn *websocket.Conn, serverMsg chan serverDataBuffer,
 		serverData serverDataBuffer
 		byteData   []byte
 	)
+	defer conn.Close()
 	for {
 		select {
 		case <-done:
-			conn.Close()
 			return
 		default:
 			err := conn.ReadJSON(&byteData)
 			if err != nil {
 				log.Println("read:", err)
-				conn.Close()
 				done <- struct{}{}
 				return
 			}
