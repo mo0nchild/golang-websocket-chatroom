@@ -31,15 +31,23 @@ func (udb userDataBuffer) sendDataToClient(conn *websocket.Conn) error {
 	return nil
 }
 
-func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Home Page")
-}
-
 var (
 	dataBuffer userDataBuffer
 	byteData   []byte
 	data       requestData
 )
+
+func jsonDataPage(w http.ResponseWriter, r *http.Request) {
+	bytes, err := json.Marshal(dataBuffer)
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Fprintf(w, string(bytes))
+}
+
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Home Page")
+}
 
 func updateRequest(conn *websocket.Conn) {
 	var count int
@@ -53,16 +61,15 @@ func updateRequest(conn *websocket.Conn) {
 		}
 	}()
 	for {
-		err := conn.ReadJSON(&byteData)
-		if err != nil {
+		if err := conn.ReadJSON(&byteData); err != nil {
 			log.Println(err)
 			return
 		}
 
 		json.Unmarshal(byteData, &data)
 		dataBuffer.Data = append(dataBuffer.Data, data)
-
 		file, _ := json.MarshalIndent(dataBuffer, "", " ")
+
 		ioutil.WriteFile("data.json", file, 0600)
 		fmt.Printf("Username: %s,\t Message: %s\n", data.UserName, data.Message)
 
@@ -121,6 +128,7 @@ func main() {
 
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/ws", wsEndpoint)
+	http.HandleFunc("/data", jsonDataPage)
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatal(err)
 	}
